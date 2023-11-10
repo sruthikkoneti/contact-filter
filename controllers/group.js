@@ -1,12 +1,11 @@
 import Group from '../models/Group.js'
 
-
 export const createGroup = async (req, res) => {
     try {
-        const { groupName } = req.body
-        console.log(req.body)
+        const { groupName, members } = req.body
         const newGroup = new Group({
-            groupName
+            groupName,
+            members
         })
 
         const savedGroup = await newGroup.save()
@@ -18,21 +17,21 @@ export const createGroup = async (req, res) => {
     }
 }
 
-// export const adminLogin = async (req, res) => {
-//     try {
-//         const { email, password } = req.body
+export const addContacts = async (req, res) => {
+    try {
+        const {groupID}=req.params
+        const {newMembers}=req.body
+        const group= await Group.findById(groupID)
+        const groupMembers=group.members
+        const newUniqueMembers= newMembers.filter(element=>!groupMembers.includes(element))
+        const modifiedGroup= await Group.findOneAndUpdate({_id:groupID},{
+            $push:{
+                members:newUniqueMembers
+            }
+        })
 
-//         const admin = await Group.findOne({ email: email })
-
-//         if (!admin) return res.status(404).json({ msg: "Group does not exist. " })
-
-//         const isMatch = await bcrypt.compare(password, admin.password)
-//         if (!isMatch) return res.status(400).json({ msg: "Invalid credentials. " })
-
-//         const token = jwt.sign({ id: admin._id }, `${process.env.JWT_SECRET}`)
-//         res.status(200).json({ token, userID: admin._id })
-//     } catch (err) {
-//         res.status(500).json({ error: err.message })
-//     }
-
-// }
+        res.status(200).json({newMembers:newUniqueMembers})
+    } catch (err) {
+        res.status(500).json({ error: err.message })
+    }
+}
